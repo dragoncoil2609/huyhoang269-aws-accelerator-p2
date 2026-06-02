@@ -1,0 +1,24 @@
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files (Lưu ý: Chứa thông tin nhạy cảm của hạ tầng thật)
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files (Lưu ý: Chứa Access Key, Secret Key tuyệt đối không được push)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
