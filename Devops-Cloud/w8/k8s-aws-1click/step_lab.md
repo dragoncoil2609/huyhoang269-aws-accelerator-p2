@@ -64,19 +64,14 @@ terraform apply -auto-approve
 
 ## 📸 5. KẾT QUẢ VÀ MINH CHỨNG (EVIDENCE)
 
-Để báo cáo Lab trở nên chuyên nghiệp và thuyết phục tuyệt đối, bạn hãy chụp 3 bức ảnh sau và chèn vào đây nhé:
-
 ### Minh chứng 1: Hạ tầng được tạo thành công bởi Terraform
-*(Chụp màn hình Terminal hiện dòng màu xanh `Apply complete! Resources: 25 added...` và dải URL của `alb_dns_name`)*
 
 ![Thành quả Terraform](image/terraform-success.png)
 
 ### Minh chứng 2: Website hoạt động trơn tru qua Load Balancer
-*(Chụp màn hình trình duyệt web khi truy cập vào đường link ALB, hiển thị giao diện Frontend của bạn. Nhớ lấy được cả thanh địa chỉ URL)*
 
 ![Giao diện Website](image/web-ui.png)
 
-### Minh chứng 3: Bên trong "Trái tim" Kubernetes
-*(Chụp màn hình Terminal lúc bạn SSH qua Bastion vào K8s Node và gõ lệnh `kubectl get pods`. Bức ảnh này chứng minh bạn đã làm chủ được cả K8s và Scale thành công 3 Replicas!)*
+### Minh chứng 3: Bên trong Kubernetes Cluster
 
 ![Kubernetes Pods](image/k8s-pods.png)
