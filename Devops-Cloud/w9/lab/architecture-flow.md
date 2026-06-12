@@ -31,32 +31,32 @@ graph TD
     end
 
     %% Luồng chạy thực tế
-    Dev -- "1. Push Code/Đổi Version" --> GitApp
+    Dev -- "1. Push Code/<br>Đổi Version" --> GitApp
     GitApp -- "2. Trigger" --> GH_App
     GH_App -- "3. Build & Push" --> DockerHub
-    GH_App -- "4. Tự động sửa file YAML" --> GitOps
+    GH_App -- "4. Tự động<br>sửa file YAML" --> GitOps
     
-    Dev -- "Hoặc tự sửa file YAML" --> GitOps
-    GitOps -- "5. Kiểm tra lỗi chính tả" --> GH_Ops
+    Dev -- "Hoặc tự<br>sửa file YAML" --> GitOps
+    GitOps -- "5. Kiểm tra<br>lỗi chính tả" --> GH_Ops
     
-    GitOps -- "6. Phát hiện thay đổi" --> ArgoCD
-    ArgoCD -- "7. Đồng bộ vào K8s" --> Rollout
+    GitOps -- "6. Phát hiện<br>thay đổi" --> ArgoCD
+    ArgoCD -- "7. Đồng bộ<br>vào K8s" --> Rollout
     
-    Rollout -- "8. Nhả 25% khách hàng" --> Canary
-    Rollout -- "Giữ 75% khách hàng an toàn" --> Stable
+    Rollout -- "8. Nhả 25%<br>khách hàng" --> Canary
+    Rollout -- "Giữ 75% khách<br>hàng an toàn" --> Stable
     
-    Rollout -- "9. Kích hoạt bài Test" --> Analysis
-    Analysis -- "10. Xin điểm số (Query)" --> Prometheus
-    Prometheus -- "11. Trả kết quả Tỷ lệ thành công" --> Analysis
+    Rollout -- "9. Kích hoạt<br>bài Test" --> Analysis
+    Analysis -- "10. Xin điểm số<br>(Query)" --> Prometheus
+    Prometheus -- "11. Trả kết quả<br>Tỷ lệ thành công" --> Analysis
     
-    Analysis -- "12A. Nếu Pass (Thành công >= 90%)" --> Rollout
-    Rollout -. "Nâng cấp 100% bản MỚI" .-> Canary
+    Analysis -- "12A. Nếu Pass<br>(Thành công >= 90%)" --> Rollout
+    Rollout -. "Nâng cấp 100%<br>bản MỚI" .-> Canary
     
-    Analysis -- "12B. Nếu Fail (Lỗi 500 quá nhiều)" --> Rollout
-    Rollout -. "Khóa bản Mới, lùi về 100% bản CŨ" .-> Stable
+    Analysis -- "12B. Nếu Fail<br>(Lỗi 500 quá nhiều)" --> Rollout
+    Rollout -. "Khóa bản Mới,<br>lùi về 100% bản CŨ" .-> Stable
     
-    Prometheus -- "13. Gửi tín hiệu Lỗi 500 > 10%" --> AlertManager
-    AlertManager -- "14. Bắn thông báo khẩn cấp" --> Email
+    Prometheus -- "13. Gửi tín hiệu<br>Lỗi 500 > 10%" --> AlertManager
+    AlertManager -- "14. Bắn thông báo<br>khẩn cấp" --> Email
     
     classDef git fill:#f34f29,color:white,stroke:#333
     classDef k8s fill:#326ce5,color:white,stroke:#333
