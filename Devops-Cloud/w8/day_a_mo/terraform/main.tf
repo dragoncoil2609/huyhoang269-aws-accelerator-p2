@@ -10,9 +10,7 @@ locals {
   }
 }
 
-# ==========================================
-# 1. BUCKET CHỨA STATE (S3 BUCKET 1)
-# ==========================================
+
 resource "aws_s3_bucket" "state_bucket" {
   # Đã sửa lại để sử dụng đúng biến local như mục đích ban đầu
   bucket        = "huyhoang269-${local.name_prefix}-tfstate"
@@ -33,9 +31,6 @@ resource "aws_s3_bucket_versioning" "state_versioning" {
   }
 }
 
-# ==========================================
-# 2. BUCKET ỨNG DỤNG (S3 BUCKET 2)
-# ==========================================
 resource "aws_s3_bucket" "app_bucket" {
   # PHỤ THUỘC NGẦM ĐỊNH (Implicit Dependency) qua việc tham chiếu ID của state_bucket
   bucket = "huyhoang269-${aws_s3_bucket.state_bucket.id}-app-data"

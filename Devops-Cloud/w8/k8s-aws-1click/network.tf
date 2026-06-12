@@ -7,7 +7,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = { Name = "k8s-aws-vpc" }
+  tags                 = { Name = "k8s-aws-vpc" }
 }
 
 # 2. VÙNG MỞ (PUBLIC SUBNETS)
@@ -16,14 +16,14 @@ resource "aws_subnet" "public_1" {
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
-  tags = { Name = "k8s-aws-public-1" }
+  tags                    = { Name = "k8s-aws-public-1" }
 }
 resource "aws_subnet" "public_2" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.2.0/24"
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = true
-  tags = { Name = "k8s-aws-public-2" }
+  tags                    = { Name = "k8s-aws-public-2" }
 }
 
 # 3. VÙNG KÍN (PRIVATE SUBNET) - Nơi giấu K8s
@@ -32,13 +32,21 @@ resource "aws_subnet" "private_1" {
   cidr_block              = "10.0.3.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = false # Tắt IP Public, tuyệt đối cách ly
-  tags = { Name = "k8s-aws-private-1" }
+  tags                    = { Name = "k8s-aws-private-1" }
+}
+
+resource "aws_subnet" "private_2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.4.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = false
+  tags                    = { Name = "k8s-aws-private-2" }
 }
 
 # 4. TẠO CỬA NGÕ (INTERNET GATEWAY & NAT GATEWAY)
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "k8s-aws-igw" }
+  tags   = { Name = "k8s-aws-igw" }
 }
 
 # Thuê 1 IP tĩnh (Elastic IP) cho NAT Gateway
@@ -50,8 +58,8 @@ resource "aws_eip" "nat" {
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public_1.id
-  tags = { Name = "k8s-aws-nat" }
-  depends_on = [aws_internet_gateway.gw]
+  tags          = { Name = "k8s-aws-nat" }
+  depends_on    = [aws_internet_gateway.gw]
 }
 
 # 5. ĐỊNH TUYẾN ĐƯỜNG ĐI (ROUTE TABLES)
@@ -84,6 +92,10 @@ resource "aws_route_table_association" "private_1" {
   subnet_id      = aws_subnet.private_1.id
   route_table_id = aws_route_table.private_rt.id
 }
+resource "aws_route_table_association" "private_2" {
+  subnet_id      = aws_subnet.private_2.id
+  route_table_id = aws_route_table.private_rt.id
+}
 
 # ==========================================
 # PHẦN 2: SECURITY GROUPS (Lớp khiên bảo vệ)
@@ -91,8 +103,8 @@ resource "aws_route_table_association" "private_1" {
 
 # SG cho Bastion Host (Chỉ mở SSH ra thế giới)
 resource "aws_security_group" "bastion" {
-  name        = "k8s-aws-bastion-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "k8s-aws-bastion-sg"
+  vpc_id = aws_vpc.main.id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -109,8 +121,8 @@ resource "aws_security_group" "bastion" {
 
 # SG cho ALB (Mở HTTP ra thế giới)
 resource "aws_security_group" "alb" {
-  name        = "k8s-aws-alb-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "k8s-aws-alb-sg"
+  vpc_id = aws_vpc.main.id
   ingress {
     from_port   = 80
     to_port     = 80
@@ -127,9 +139,9 @@ resource "aws_security_group" "alb" {
 
 # SG cho K8s Node (Tuyệt đối an toàn)
 resource "aws_security_group" "ec2" {
-  name        = "k8s-aws-ec2-sg"
-  vpc_id      = aws_vpc.main.id
-  
+  name   = "k8s-aws-ec2-sg"
+  vpc_id = aws_vpc.main.id
+
   ingress {
     description     = "Chi nhan SSH tu Bastion Host"
     from_port       = 22

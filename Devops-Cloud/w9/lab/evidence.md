@@ -24,8 +24,6 @@ Tài liệu này tổng hợp chi tiết từng bước thực hành từ việc
      git push -u origin main
      ```
 
-![Demo Lab 0](./image/lab0_demo.png)
-
 ### Lab 1: Cài đặt ArgoCD vào Cụm
 **Mục tiêu:** Cài đặt ArgoCD - một công cụ GitOps Controller liên tục theo dõi sự thay đổi trên Git và áp dụng nó xuống cụm K8s.
 **Các bước chi tiết:**
@@ -168,6 +166,8 @@ Tài liệu này tổng hợp chi tiết từng bước thực hành từ việc
    - Rollout lập tức chuyển sang trạng thái **Degraded** (Suy thoái), kích hoạt cơ chế phòng vệ **Tự động Abort**. Nó sẽ khóa chặt phiên bản mới, đẩy toàn bộ 100% traffic trở lại phiên bản cũ ngay tắp lự. Hệ thống được bảo vệ an toàn diện rộng mà không cần kỹ sư thức đêm trực hệ thống.
 
 ![Demo Lab 10](./image/lab10_demo.png)
+![Demo Lab 10](./image/lab10_demo_1.png)
+
 
 ### Lab 11: Thiết Lập Cảnh Báo Lỗi Qua Email (Alertmanager)
 **Mục tiêu:** Xây dựng hệ thống báo động đỏ (Alerting). Khi K8s tự động Abort hoặc khi hệ thống có vấn đề, đội ngũ DevOps/SRE phải lập tức nhận được thông báo qua Email để vào điều tra.

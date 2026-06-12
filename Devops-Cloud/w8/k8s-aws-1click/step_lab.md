@@ -5,6 +5,19 @@
 
 ---
 
+## 🧠 QUYẾT ĐỊNH KIẾN TRÚC: REMOTE-EXEC VS USER DATA
+
+Để tự động hóa cài đặt K8s Node nằm trong mạng Private, hệ thống đã **KHÔNG sử dụng User Data** truyền thống mà chọn giải pháp nâng cao: **`null_resource` kết hợp `remote-exec` (SSH Tunneling qua Bastion Host)**. Quyết định này giải quyết triệt để 4 điểm yếu chí mạng của User Data:
+
+| Tiêu chí | Dùng User Data truyền thống | Dùng Remote-Exec (Lựa chọn của chúng ta) |
+|---|---|---|
+| **1. Tính phụ thuộc mạng (Dependency)** | EC2 boot lên là chạy script ngay. Nếu lúc đó NAT Gateway chưa kịp tạo xong ➔ Mất mạng ➔ Tải Docker thất bại. | Terraform thông minh chờ NAT Gateway khởi tạo xong hoàn toàn mới chạy script (`depends_on`). Tỷ lệ thành công 100%. |
+| **2. Bắt lỗi (Troubleshooting)** | Chạy ngầm trong bóng tối. Muốn xem log cài đặt phải chui vào server đọc file `/var/log/cloud-init-output.log` rất tốn thời gian. | Terraform in log cài đặt trực tiếp (Real-time) ra màn hình máy tính cá nhân. Lỗi ở dòng nào báo chữ đỏ ở dòng đó ngay lập tức. |
+| **3. Cấp quyền User (Permissions)** | Chạy bằng quyền `root` ẩn. Sinh ra lỗi `Permission Denied` khi bạn SSH vào bằng tài khoản `ubuntu` và gõ lệnh `kubectl get pods`. | Chạy trực tiếp bằng tài khoản `ubuntu` thông qua giao thức SSH (`user="ubuntu"`). Setup xong SSH vào là dùng được lệnh ngay, không rườm rà. |
+| **4. Khả năng chạy lại (Re-runnable)** | Script chạy **duy nhất 1 lần** trong vòng đời máy ảo. Nếu gõ sai 1 chữ trong script, bắt buộc phải Terminate hủy máy tạo lại từ đầu. | Bị lỗi chỗ nào, sửa code chỗ đó rồi gõ lại `terraform apply`. Terraform sẽ chui vào EC2 chạy tiếp đoạn script đó mà không cần xóa máy. |
+
+---
+
 ## 🏗️ 1. SƠ ĐỒ KIẾN TRÚC MẠNG (ARCHITECTURE FLOW)
 
 Hệ thống được chia làm 2 phân vùng mạng rõ rệt để đảm bảo an ninh tối đa:
