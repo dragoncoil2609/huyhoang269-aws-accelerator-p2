@@ -1,67 +1,45 @@
 # Luồng Chạy Tổng Thể: Từ Code Đến K8s (GitOps & Auto-Canary)
 
+Để dễ nhìn hơn, sếp xem biểu đồ Tuần tự (Sequence Diagram) dưới đây nhé. Biểu đồ này thể hiện rõ ràng từng bước theo dòng thời gian, không bị rối mắt như biểu đồ khối:
+
 ```mermaid
-graph TD
-    %% Định nghĩa các khối
-    Dev(("Lập trình viên"))
-    GitApp["GitHub: Source Code App"]
-    GitOps["GitHub: minikube-gitops"]
+sequenceDiagram
+    autonumber
+    actor Dev as Lập trình viên
+    participant GitApp as Kho App (GitHub)
+    participant GH as GitHub Actions (CI)
+    participant Docker as Docker Hub
+    participant GitOps as Kho GitOps (GitHub)
+    participant Argo as ArgoCD (K8s)
+    participant Rollout as Argo Rollout (K8s)
+    participant Prom as Prometheus (K8s)
+    participant Alert as Alertmanager (K8s)
+
+    Note over Dev, Docker: Giai đoạn 1: Build & Đóng gói (Continuous Integration)
+    Dev->>GitApp: Push code tính năng mới
+    GitApp->>GH: Kích hoạt luồng chạy CI
+    GH->>Docker: Build Image & Push (ví dụ: v2.0)
+    GH->>GitOps: Tự động cập nhật file api.yaml (chuyển sang bản v2.0)
+
+    Note over GitOps, Rollout: Giai đoạn 2: Triển khai tự động (Continuous Deployment)
+    Argo->>GitOps: Phát hiện api.yaml có thay đổi
+    Argo->>Rollout: Đồng bộ cấu hình mới vào Cụm K8s
+
+    Note over Rollout, Prom: Giai đoạn 3: Chiến thuật Canary & Tự động Phân tích
+    Rollout->>Rollout: Khởi tạo bản MỚI, chia 25% traffic vào bản MỚI, 75% ở bản CŨ
+    Rollout->>Prom: Gọi AnalysisRun yêu cầu đánh giá bản MỚI
     
-    subgraph CI_Pipeline ["CI: Tích hợp liên tục"]
-        GH_App["GitHub Actions: Build Image"]
-        DockerHub[("Docker Hub")]
-        GH_Ops["GitHub Actions: Kubeconform"]
-    end
-    
-    subgraph CD_Pipeline ["CD: Triển khai liên tục"]
-        ArgoCD{"ArgoCD"}
-    end
-    
-    subgraph K8s_Cluster ["Cụm K8s Minikube"]
-        Rollout["Argo Rollout"]
-        Canary["Bản MỚI: 25% Traffic"]
-        Stable["Bản CŨ: 75% Traffic"]
-        Analysis["AnalysisRun"]
-    end
-    
-    subgraph Observability ["Giám sát & Cảnh báo"]
-        Prometheus(("Prometheus"))
-        AlertManager["Alertmanager"]
-        Email["Email Cảnh Báo"]
+    loop Phân tích 6 lần (mỗi 10s)
+        Prom-->>Rollout: Trả về kết quả (Tỷ lệ thành công)
     end
 
-    %% Luồng chạy thực tế
-    Dev -- "1. Push Code/Đổi Version" --> GitApp
-    GitApp -- "2. Trigger" --> GH_App
-    GH_App -- "3. Build & Push" --> DockerHub
-    GH_App -- "4. Tự động sửa file YAML" --> GitOps
-    
-    Dev -- "Hoặc tự sửa file YAML" --> GitOps
-    GitOps -- "5. Kiểm tra lỗi chính tả" --> GH_Ops
-    
-    GitOps -- "6. Phát hiện thay đổi" --> ArgoCD
-    ArgoCD -- "7. Đồng bộ vào K8s" --> Rollout
-    
-    Rollout -- "8. Nhả 25% khách hàng" --> Canary
-    Rollout -- "Giữ 75% khách hàng an toàn" --> Stable
-    
-    Rollout -- "9. Kích hoạt bài Test" --> Analysis
-    Analysis -- "10. Xin điểm số (Query)" --> Prometheus
-    Prometheus -- "11. Trả kết quả Tỷ lệ thành công" --> Analysis
-    
-    Analysis -- "12A. Nếu Pass (Thành công >= 90%)" --> Rollout
-    Rollout -. "Nâng cấp 100% bản MỚI" .-> Canary
-    
-    Analysis -- "12B. Nếu Fail (Lỗi 500 quá nhiều)" --> Rollout
-    Rollout -. "Khóa bản Mới, lùi về 100% bản CŨ" .-> Stable
-    
-    Prometheus -- "13. Gửi tín hiệu Lỗi 500 > 10%" --> AlertManager
-    AlertManager -- "14. Bắn thông báo khẩn cấp" --> Email
-    
-    classDef git fill:#f34f29,color:white,stroke:#333
-    classDef k8s fill:#326ce5,color:white,stroke:#333
-    classDef monitor fill:#e6522c,color:white,stroke:#333
-    class GitApp,GitOps git
-    class Rollout,Canary,Stable k8s
-    class Prometheus,AlertManager monitor
+    alt Kịch bản TỐT: Thành công >= 90%
+        Rollout->>Rollout: Analysis PASS -> Chuyển 100% traffic sang bản MỚI
+        Note right of Rollout: Hoàn tất nâng cấp mượt mà!
+    else Kịch bản XẤU: Lỗi 500 quá nhiều (Thành công < 90%)
+        Rollout->>Rollout: Analysis FAIL -> HỦY BỎ (Abort), lùi về 100% bản CŨ
+        Prom->>Alert: Báo động! Tỷ lệ lỗi > 10%
+        Alert->>Dev: Gửi Email cảnh báo khẩn cấp!
+        Note right of Rollout: Khách hàng an toàn, Dev nhận email về sửa code.
+    end
 ```
