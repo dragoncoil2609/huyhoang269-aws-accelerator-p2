@@ -85,3 +85,49 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a 
 ```
 Khi cài đặt thành công, trạng thái sẽ hiển thị `"status": "running"`.
 ![Trạng thái Agent](./image/agent-status.png)
+
+---
+
+## Bài 3: Alert on AWS Root Account Login
+**Mục tiêu:** Thiết lập hệ thống tự động phát hiện và gửi cảnh báo qua email ngay lập tức khi có người dùng đăng nhập vào tài khoản Root (tài khoản quyền lực nhất) trên giao diện AWS Console.
+
+### Bước 1: Kích hoạt AWS CloudTrail (Tùy chọn, nếu chưa có)
+*Lưu ý: EventBridge cần CloudTrail để ghi nhận sự kiện đăng nhập.*
+1. Truy cập dịch vụ **CloudTrail** trên AWS Console.
+2. Kiểm tra xem đã có Trail nào đang hoạt động chưa. Nếu chưa, chọn **Create trail**.
+3. Điền tên cho Trail (Ví dụ: `Management-Events-Trail`) và tạo một S3 bucket mới để lưu trữ log. Đảm bảo Trail này đang ghi nhận các sự kiện quản lý (Management events).
+
+### Bước 2: Tạo Rule trên Amazon EventBridge
+1. Điều hướng đến dịch vụ **Amazon EventBridge** -> Chọn **Rules** -> **Create rule**.
+2. Đặt tên Rule (Ví dụ: `Root-Login-Alert`). Chọn **Rule type** là **Rule with an event pattern** -> Next.
+3. Tại phần **Event pattern**:
+   - Event source: **AWS services**
+   - AWS service: **AWS Console Sign-in**
+   - Event type: **Sign-in Events**
+4. Kéo xuống mục **Event pattern** (dạng JSON), nhấn nút **Edit pattern** và dán đoạn mã sau vào để hệ thống chỉ báo động đối với tài khoản Root:
+   ```json
+   {
+     "detail-type": ["AWS Console Sign In via CloudTrail"],
+     "source": ["aws.signin"],
+     "detail": {
+       "userIdentity": {
+         "type": ["Root"]
+       }
+     }
+   }
+   ```
+5. Chọn **Next**.
+
+### Bước 3: Cấu hình Target (Đích đến của cảnh báo)
+1. Trong phần **Select target**:
+   - Target types: **AWS service**
+   - Select a target: **SNS topic**
+   - Topic: Lựa chọn lại Topic `EC2-CPU-Alerts` đã tạo ở Bài 1 (Hoặc tạo một Topic mới nếu muốn phân loại riêng).
+2. Lựa chọn **Next** và hoàn tất việc tạo Rule (Create rule).
+![Cấu hình EventBridge Rule](./image/eventbridge-root-alert.png)
+
+### Bước 4: Kiểm tra cấu hình (Tùy chọn)
+1. Đăng xuất khỏi tài khoản IAM hiện tại.
+2. Tiến hành đăng nhập lại vào giao diện AWS Console bằng thông tin của **Root user**.
+3. Kiểm tra hòm thư email để xác nhận thông báo Root Login đã được gửi thành công.
+![Email Cảnh báo Root Login](./image/root-login-email.png)
